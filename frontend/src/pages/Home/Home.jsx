@@ -1,6 +1,7 @@
 import Hero from "../../components/home/Hero";
 import FlightSearch from "../../components/home/FlightSearch";
 import PopularDestinations from "../../components/home/PopularDestinations";
+import Features from "../../components/home/Features";
 
 function Home() {
   return (
@@ -8,6 +9,7 @@ function Home() {
       <Hero />
       <FlightSearch />
       <PopularDestinations />
+      <Features />
     </>
   );
 }
