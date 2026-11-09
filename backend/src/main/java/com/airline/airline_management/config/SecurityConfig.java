@@ -38,12 +38,21 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/error").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/passenger/**").hasRole("PASSENGER")
-                        .anyRequest().authenticated()
-                )
+               .authorizeHttpRequests(auth -> auth
+        .requestMatchers(
+                "/api/auth/**",
+                "/error",
+                "/swagger",
+                "/swagger-ui/**",
+                "/swagger-ui.html",
+                "/v3/api-docs/**"
+        ).permitAll()
+
+        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+        .requestMatchers("/api/passenger/**").hasRole("PASSENGER")
+
+        .anyRequest().authenticated()
+)
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,

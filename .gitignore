@@ -25,3 +25,7 @@
 # OS files
 .DS_Store
 Thumbs.db
+
+# Eclipse / Visual Studio
+.metadata/
+.vs/
