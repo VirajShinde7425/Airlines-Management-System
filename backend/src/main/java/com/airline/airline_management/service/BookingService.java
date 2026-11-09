@@ -1,5 +1,7 @@
+
 package com.airline.airline_management.service;
 
+import com.airline.airline_management.dto.BookingResponseDTO;
 import com.airline.airline_management.entity.Booking;
 import com.airline.airline_management.entity.BookingStatus;
 import com.airline.airline_management.entity.Flight;
@@ -7,10 +9,12 @@ import com.airline.airline_management.entity.User;
 import com.airline.airline_management.repository.BookingRepository;
 import com.airline.airline_management.repository.FlightRepository;
 import com.airline.airline_management.repository.UserRepository;
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
-import java.math.BigDecimal;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,7 +36,7 @@ public class BookingService {
     }
 
     @Transactional
-    public Booking createBooking(
+    public BookingResponseDTO createBooking(
             String email,
             Long flightId,
             Integer numberOfSeats
@@ -54,6 +58,13 @@ public class BookingService {
                         new RuntimeException("Flight not found")
                 );
 
+        // Check whether the flight departure time is in the future
+        if (!flight.getDepartureTime().isAfter(LocalDateTime.now())) {
+            throw new RuntimeException(
+                "Cannot book a flight that has already departed"
+             );
+        }
+
         if (flight.getAvailableSeats() < numberOfSeats) {
             throw new RuntimeException(
                     "Not enough seats available"
@@ -61,7 +72,7 @@ public class BookingService {
         }
 
         BigDecimal totalAmount = flight.getPrice()
-        .multiply(BigDecimal.valueOf(numberOfSeats));
+                .multiply(BigDecimal.valueOf(numberOfSeats));
 
         flight.setAvailableSeats(
                 flight.getAvailableSeats() - numberOfSeats
@@ -78,16 +89,26 @@ public class BookingService {
                 .status(BookingStatus.CONFIRMED)
                 .build();
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+
+        return BookingResponseDTO.from(savedBooking);
     }
 
-    public List<Booking> getMyBookings(String email) {
+    @Transactional(readOnly = true)
+    public List<BookingResponseDTO> getMyBookings(String email) {
 
         return bookingRepository
-                .findByUserEmailOrderByBookingDateDesc(email);
+                .findByUserEmailOrderByBookingDateDesc(email)
+                .stream()
+                .map(BookingResponseDTO::from)
+                .toList();
     }
 
-    public Booking getBookingById(Long id, String email) {
+    @Transactional(readOnly = true)
+    public BookingResponseDTO getBookingById(
+            Long id,
+            String email
+    ) {
 
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() ->
@@ -100,11 +121,14 @@ public class BookingService {
             );
         }
 
-        return booking;
+        return BookingResponseDTO.from(booking);
     }
 
     @Transactional
-    public Booking cancelBooking(Long id, String email) {
+    public BookingResponseDTO cancelBooking(
+            Long id,
+            String email
+    ) {
 
         Booking booking = bookingRepository.findByIdForUpdate(id)
                 .orElseThrow(() ->
@@ -138,7 +162,9 @@ public class BookingService {
 
         booking.setStatus(BookingStatus.CANCELLED);
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+
+        return BookingResponseDTO.from(savedBooking);
     }
 
     private String generatePNR() {
