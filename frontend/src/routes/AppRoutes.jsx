@@ -5,6 +5,10 @@ import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/Home/Home";
 import Login from "../pages/Auth/Login";
 import MyBookings from "../pages/Passenger/MyBookings";
+import AdminDashboard from "../pages/Admin/AdminDashboard";
+import AdminFlights from "../pages/Admin/AdminFlights";
+
+import ProtectedRoute from "../components/common/ProtectedRoute";
 
 function AppRoutes() {
     return (
@@ -36,6 +40,28 @@ function AppRoutes() {
                 }
             />
 
+            {/* Admin Dashboard */}
+            <Route
+                path="/admin/dashboard"
+                element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                        <MainLayout>
+                            <AdminDashboard />
+                        </MainLayout>
+                    </ProtectedRoute>
+                }
+            />
+            {/* Admin Flight Management */}
+            <Route
+                path="/admin/flights"
+                element={
+                    <ProtectedRoute allowedRoles={["ADMIN"]}>
+                        <MainLayout>
+                            <AdminFlights />
+                        </MainLayout>
+                    </ProtectedRoute>
+                }
+            />
             <Route path="*" element={<h1>404 - Page Not Found</h1>} />
         </Routes>
     );

@@ -34,6 +34,24 @@ function Navbar() {
                                 </Link>
                             )}
 
+                            {user.role === "ADMIN" && (
+                                <>
+                                    <Link
+                                        to="/admin/dashboard"
+                                        className="hover:text-blue-200"
+                                    >
+                                        Admin Dashboard
+                                    </Link>
+
+                                    <Link
+                                        to="/admin/flights"
+                                        className="hover:text-blue-200"
+                                    >
+                                        Manage Flights
+                                    </Link>
+                                </>
+                            )}
+
                             <span className="font-medium">
                                 Welcome, {user.fullName}
                             </span>

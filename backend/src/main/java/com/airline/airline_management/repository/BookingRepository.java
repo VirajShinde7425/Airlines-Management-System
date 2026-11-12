@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import com.airline.airline_management.entity.Booking;
 import com.airline.airline_management.entity.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,5 +28,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 @Query("SELECT b FROM Booking b WHERE b.id = :bookingId")
 Optional<Booking> findByIdForUpdate(
         @Param("bookingId") Long bookingId
+);
+@Query("""
+    SELECT COALESCE(SUM(b.totalAmount), 0)
+    FROM Booking b
+    WHERE b.status = :status
+""")
+BigDecimal calculateRevenueByStatus(
+        @Param("status") BookingStatus status
 );
 }
