@@ -6,17 +6,19 @@ import com.airline.airline_management.entity.Booking;
 import com.airline.airline_management.entity.BookingStatus;
 import com.airline.airline_management.entity.Flight;
 import com.airline.airline_management.entity.User;
+import com.airline.airline_management.event.BookingCreatedEvent;
 import com.airline.airline_management.repository.BookingRepository;
 import com.airline.airline_management.repository.FlightRepository;
 import com.airline.airline_management.repository.UserRepository;
+
 import java.time.LocalDateTime;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BookingService {
@@ -24,15 +26,18 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final FlightRepository flightRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public BookingService(
             BookingRepository bookingRepository,
             FlightRepository flightRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.bookingRepository = bookingRepository;
         this.flightRepository = flightRepository;
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -58,11 +63,10 @@ public class BookingService {
                         new RuntimeException("Flight not found")
                 );
 
-        // Check whether the flight departure time is in the future
         if (!flight.getDepartureTime().isAfter(LocalDateTime.now())) {
             throw new RuntimeException(
-                "Cannot book a flight that has already departed"
-             );
+                    "Cannot book a flight that has already departed"
+            );
         }
 
         if (flight.getAvailableSeats() < numberOfSeats) {
@@ -90,6 +94,12 @@ public class BookingService {
                 .build();
 
         Booking savedBooking = bookingRepository.save(booking);
+
+        // Publish event after creating the booking.
+        // The listener sends the ticket only after transaction commit.
+        eventPublisher.publishEvent(
+                new BookingCreatedEvent(savedBooking.getId())
+        );
 
         return BookingResponseDTO.from(savedBooking);
     }

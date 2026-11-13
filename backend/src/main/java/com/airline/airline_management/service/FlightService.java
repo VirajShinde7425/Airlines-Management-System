@@ -6,6 +6,7 @@ import com.airline.airline_management.repository.FlightRepository;
 import com.airline.airline_management.repository.BookingRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import com.airline.airline_management.entity.BookingStatus;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,8 +96,8 @@ public class FlightService {
         return flightRepository.save(existingFlight);
     }
 
-    // ADMIN: Delete flight only if no booking records exist
-    @Transactional
+    // ADMIN: Delete flight if no confirmed bookings exist
+@Transactional
 public void deleteFlight(Long id) {
 
     Flight flight = flightRepository.findByIdForUpdate(id)
@@ -106,13 +107,27 @@ public void deleteFlight(Long id) {
                             "Flight not found"
                     ));
 
-    if (!bookingRepository.findByFlightId(id).isEmpty()) {
+    // Prevent deletion if confirmed bookings exist
+    boolean hasConfirmedBookings =
+            bookingRepository.existsByFlightIdAndStatus(
+                    id,
+                    BookingStatus.CONFIRMED
+            );
+
+    if (hasConfirmedBookings) {
         throw new ResponseStatusException(
                 HttpStatus.CONFLICT,
-                "Cannot delete this flight because booking records exist"
+                "Cannot delete this flight because confirmed bookings exist"
         );
     }
 
+    // Remove cancelled booking records to avoid foreign-key constraint errors
+    bookingRepository.deleteByFlightIdAndStatus(
+            id,
+            BookingStatus.CANCELLED
+    );
+
+    // Delete the flight
     flightRepository.delete(flight);
 }
 

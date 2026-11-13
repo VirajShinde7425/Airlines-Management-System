@@ -1,8 +1,12 @@
+
 package com.airline.airline_management.config;
 
 import com.airline.airline_management.security.JwtAuthenticationFilter;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -10,12 +14,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
-
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -38,21 +40,36 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-               .authorizeHttpRequests(auth -> auth
-        .requestMatchers(
-                "/api/auth/**",
-                "/error",
-                "/swagger",
-                "/swagger-ui/**",
-                "/swagger-ui.html",
-                "/v3/api-docs/**"
-        ).permitAll()
+                .authorizeHttpRequests(auth -> auth
 
-        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-        .requestMatchers("/api/passenger/**").hasRole("PASSENGER")
+                        // Public authentication endpoints
+                        .requestMatchers("/api/auth/**").permitAll()
 
-        .anyRequest().authenticated()
-)
+                        // Public flight viewing and searching
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/flights",
+                                "/api/flights/**"
+                        ).permitAll()
+
+                        // Swagger endpoints
+                        .requestMatchers(
+                                "/error",
+                                "/swagger",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
+                        // Admin-only endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Passenger-only endpoints
+                        .requestMatchers("/api/passenger/**").hasRole("PASSENGER")
+
+                        // Everything else requires authentication
+                        .anyRequest().authenticated()
+                )
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,

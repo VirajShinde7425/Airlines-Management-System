@@ -8,6 +8,7 @@ import com.airline.airline_management.entity.Booking;
 import com.airline.airline_management.entity.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.math.BigDecimal;
+import org.springframework.data.jpa.repository.Modifying;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,23 @@ Optional<Booking> findByIdForUpdate(
     WHERE b.status = :status
 """)
 BigDecimal calculateRevenueByStatus(
+        @Param("status") BookingStatus status
+);
+// Check whether a flight has confirmed bookings
+boolean existsByFlightIdAndStatus(
+        Long flightId,
+        BookingStatus status
+);
+
+// Delete cancelled bookings associated with a flight
+@Modifying
+@Query("""
+    DELETE FROM Booking b
+    WHERE b.flight.id = :flightId
+    AND b.status = :status
+""")
+int deleteByFlightIdAndStatus(
+        @Param("flightId") Long flightId,
         @Param("status") BookingStatus status
 );
 }

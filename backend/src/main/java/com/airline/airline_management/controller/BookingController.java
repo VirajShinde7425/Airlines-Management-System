@@ -6,6 +6,7 @@ import com.airline.airline_management.service.BookingService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,8 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
+    // Only passengers can create bookings
+    @PreAuthorize("hasRole('PASSENGER')")
     @PostMapping
     public ResponseEntity<BookingResponseDTO> createBooking(
             @RequestBody Map<String, Object> request,
@@ -44,6 +47,8 @@ public class BookingController {
         return ResponseEntity.ok(booking);
     }
 
+    // Only passengers can view their bookings
+    @PreAuthorize("hasRole('PASSENGER')")
     @GetMapping("/my")
     public ResponseEntity<List<BookingResponseDTO>> getMyBookings(
             Authentication authentication
@@ -56,6 +61,8 @@ public class BookingController {
         );
     }
 
+    // Only passengers can view their individual bookings
+    @PreAuthorize("hasRole('PASSENGER')")
     @GetMapping("/{id}")
     public ResponseEntity<BookingResponseDTO> getBookingById(
             @PathVariable Long id,
@@ -70,6 +77,8 @@ public class BookingController {
         );
     }
 
+    // Only passengers can cancel their own bookings
+    @PreAuthorize("hasRole('PASSENGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<BookingResponseDTO> cancelBooking(
             @PathVariable Long id,

@@ -1,13 +1,14 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth.js";
 
 function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState(location.state?.email || "");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ function Login() {
 
         try {
             await login(email, password);
-            navigate("/");
+            navigate(location.state?.from || "/");
         } catch (err) {
             setError(
                 err.response?.data?.message || "Invalid email or password"
@@ -29,7 +30,9 @@ function Login() {
             setLoading(false);
         }
     };
-
+    const success = location.state?.registered
+        ? "Your passenger account has been created successfully. Please login."
+        : "";
     return (
         <div className="flex min-h-[80vh] items-center justify-center bg-slate-100 px-4 py-12">
             <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
@@ -40,6 +43,12 @@ function Login() {
                 <p className="mb-8 text-center text-gray-500">
                     Login to your Airline Management account
                 </p>
+
+                {success && (
+                    <p className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                        {success}
+                    </p>
+                )}
 
                 {error && (
                     <p className="mb-4 rounded-lg bg-red-100 p-3 text-sm text-red-700">
@@ -86,11 +95,15 @@ function Login() {
                         {loading ? "Logging in..." : "Login"}
                     </button>
                 </form>
-
                 <p className="mt-6 text-center text-sm text-gray-600">
-                    Don't have an account? Registration will be available soon.
+                    Don't have an account?{" "}
+                    <Link
+                        to="/register"
+                        className="font-bold text-blue-900 hover:underline"
+                    >
+                        Create Passenger Account
+                    </Link>
                 </p>
-
                 <p className="mt-4 text-center">
                     <Link to="/" className="font-medium text-blue-900 hover:underline">
                         Back to Home
